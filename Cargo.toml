@@ -1,0 +1,28 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/ultrahonk-soroban-verifier",
+    "contracts/verifier",
+]
+
+# Pin to the same soroban-sdk version as NethermindEth/rs-soroban-ultrahonk
+# (Protocol 26 = "Yardstick"). Both member crates use `workspace = true` for
+# soroban-sdk, so this single pin defines the toolchain for the whole project.
+[workspace.dependencies]
+# Exact pin: the dev-dep on soroban-env-host 26.1.x in the upstream verifier
+# crate would otherwise pull soroban-sdk 26.1.x (with testutils feature
+# enabled via dev-deps), which breaks a `cargo build --release` of the
+# workspace because testutils.rs needs serde_json + rand.
+soroban-sdk = { version = "=26.0.1", default-features = false }
+
+# Match the upstream release profile for minimal-size WASM (CAP-0046 budget).
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+overflow-checks = true
+
+[profile.release.package."*"]
+opt-level = "z"

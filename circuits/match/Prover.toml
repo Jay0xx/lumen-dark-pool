@@ -1,0 +1,41 @@
+# Prover.toml — T1 happy-path inputs (see /circuits/SPEC.md §6)
+#
+# buy:  side=0 pair=42 amount=100 limit=105 owner=12345 nonce=111
+# sell: side=1 pair=42 amount=80  limit=100 owner=67890 nonce=222
+#
+# Expected:
+#   fill_amount    = min(100, 80)            = 80
+#   clearing_price = floor((105 + 100) / 2)  = 102
+#   commit_buy     = Poseidon(0, 42, 100, 105, 12345, 111)
+#   commit_sell    = Poseidon(1, 42, 80,  100, 67890, 222)
+#   nullifier_buy  = Poseidon(commit_buy,  NULLIFIER_DOMAIN)
+#   nullifier_sell = Poseidon(commit_sell, NULLIFIER_DOMAIN)
+#
+# The four hash fields below are placeholders that match Noir 1.0.0-beta.22
+# stdlib defaults; regenerate them via:
+#   nargo execute witness --print-public-hash
+# or compute via the helper at /circuits/scripts/compute-hashes.ts.
+# Replace the zeros below once the helper produces real values.
+
+# public
+commit_buy     = "0x0"
+commit_sell    = "0x0"
+nullifier_buy  = "0x0"
+nullifier_sell = "0x0"
+pair_id        = "42"
+fill_amount    = "80"
+clearing_price = "102"
+
+# private — buy order
+side_b   = "0"
+amount_b = "100"
+limit_b  = "105"
+owner_b  = "12345"
+nonce_b  = "111"
+
+# private — sell order
+side_s   = "1"
+amount_s = "80"
+limit_s  = "100"
+owner_s  = "67890"
+nonce_s  = "222"

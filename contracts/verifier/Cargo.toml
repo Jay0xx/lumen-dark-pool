@@ -1,0 +1,26 @@
+[package]
+name = "identity"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+soroban-sdk = { workspace = true, default-features = false, features = ["alloc"] }
+ultrahonk_soroban_verifier = { path = "../../crates/ultrahonk-soroban-verifier", default-features = false }
+
+[dev-dependencies]
+# Inherited dev-deps from upstream's in-memory test harness. We do not need
+# them for a WASM release build; they were leaking into the workspace
+# resolve graph in two ways:
+#   1. soroban-env-host = "26.1.3" bumped soroban-sdk to 26.1.x with
+#      testutils feature enabled -> serde_json/rand missing.
+#   2. crates/test-utils has soroban-sdk with features=["testutils"] in
+#      its MAIN [dependencies] (not dev-deps), so even as a dev-dep of
+#      the verifier, it still unifies testutils into the workspace build.
+# Drop the path dep entirely for Day 1; re-enable locally when running
+# `cargo test -p verifier` against a host.
+# soroban-sdk = { workspace = true, features = ["testutils", "alloc"] }
+# soroban-env-host = "26.1.3"
+# ultrahonk-test-utils = { path = "../../crates/test-utils" }

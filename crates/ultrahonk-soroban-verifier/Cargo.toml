@@ -1,0 +1,27 @@
+[package]
+name = "ultrahonk_soroban_verifier"
+version = "0.1.0"
+edition = "2021"
+
+license     = "MIT"
+description = "Rust verifier for UltraHonk proofs"
+repository  = "https://github.com/yugocabrio/rs-soroban-ultrahonk"
+
+[dependencies]
+# workspace = true inherits VERSION but NOT default-features; soroban-sdk's
+# default features pull in testutils (needs serde_json + rand), which breaks
+# a non-test workspace build. Force defaults off.
+soroban-sdk = { workspace = true, default-features = false }
+
+[dev-dependencies]
+# Dev-deps removed: cargo's workspace feature unification pulls dev-dep
+# features (testutils) into the WASM release build, which then fails because
+# soroban-sdk's testutils module needs serde_json + rand. Re-enable locally
+# when running `cargo test -p ultrahonk_soroban_verifier` against a host.
+# soroban-sdk = { workspace = true, features = ["testutils"] }
+# ultrahonk-test-utils = { path = "../test-utils" }
+
+[features]
+default = []
+std = []
+trace = []

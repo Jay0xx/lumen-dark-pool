@@ -1,0 +1,17 @@
+[package]
+name = "hello"
+type = "bin"
+authors = ["lumen-dark-pool"]
+# beta versions not allowed in requirements — pin to a stable bracket
+compiler_version = ">=1.0.0"
+
+# Noir stdlib's std::hash::poseidon path is unstable across beta versions.
+# Pin to the upstream Poseidon crate (same one rs-soroban-ultrahonk uses) —
+# its Poseidon2::hash is over the BN254 scalar field, matching Soroban's
+# BN254 Poseidon host functions (CAP-0075).
+[dependencies]
+poseidon = { tag = "v0.2.0", git = "https://github.com/noir-lang/poseidon" }
+
+[[bin]]
+name = "hello"
+path = "src/main.nr"

@@ -1,0 +1,4 @@
+# Witness inputs for the hello circuit. Matches the rs-soroban-ultrahonk
+# identity fixture so the same proof bytes verify against either contract.
+x = "42"
+h = "0x255ee8299be9389b21052fd317f8cae762f9c89f756ac79262fb648a70ee7a08"
