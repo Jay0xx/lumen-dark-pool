@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/ultrahonk-soroban-verifier",
     "contracts/verifier",
+    "contracts/commitment",
 ]
 
 # Pin to the same soroban-sdk version as NethermindEth/rs-soroban-ultrahonk

@@ -1,0 +1,16 @@
+[package]
+name = "commitment"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# workspace = true inherits VERSION but NOT default-features; soroban-sdk's
+# default features pull in testutils, which breaks `cargo build --release` of
+# the workspace (matches the pattern set by contracts/verifier/Cargo.toml).
+soroban-sdk = { workspace = true, default-features = false, features = ["alloc"] }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, default-features = false, features = ["alloc", "testutils"] }

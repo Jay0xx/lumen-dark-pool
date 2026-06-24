@@ -154,3 +154,94 @@ lumen-dark-pool/
   in one tx envelope for atomic settlement.
 - **Day 5:** Minimal web UI via Stellar Wallets Kit.
 - **Day 6:** Polish, 2-3 min demo video, submit.
+
+## 10. Day 2 — commitment + nullifier contract (shipped)
+
+The on-chain state layer for the dark pool: stores commitments and
+nullifiers, gates `spend` on `SETTLEMENT_AUTH.require_auth()`, enforces
+atomic all-or-nothing burn of both nullifiers.
+
+```bash
+# Build WASM
+cd lumen-dark-pool
+cargo build --target wasm32v1-none --release
+# -> target/wasm32v1-none/release/commitment.wasm  (6.3 KB)
+
+# Run the in-process unit tests
+cargo test -p commitment --release
+# -> 6 tests pass: commit_stores_and_query, duplicate_commit_rejected,
+#    spend_succeeds_when_inputs_valid, spend_reverts_on_missing_commitment,
+#    spend_reverts_when_caller_not_settlement_auth,
+#    atomicity_and_spent_nullifier_reverts
+
+# End-to-end demo on Stellar public testnet (one command)
+bash scripts/commitment_demo.sh
+# Phases: build WASM -> deploy -> compute hashes via nargo execute ->
+#          commit both -> spend (matched event) -> re-spend reverts.
+```
+
+Last successful run:
+
+```
+contract : CCY2VIBPQ5PTPDSPJUWPWQJ4TDNPQ36CADVTT5NQTDB2RILIHHLOYQ5D
+network  : Stellar public testnet
+deploy tx: 62cdaf4036e7517e4137f24958c6fcbf2f7108b10cbc35ece41e3afb2f6aae64
+events   : 2x committed, 1x matched, 1x re-spend reverted (Error #5)
+```
+
+### Day 2 gotchas
+
+| Symptom                                                                 | Cause                                                                                              | Fix                                                                                       |
+| ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `cargo build` 176 errors: `cannot find serde_json / rand` inside `soroban-sdk/testutils.rs` | Each new crate risks re-introducing testutils via a path dep. Stay disciplined: no path deps in member crates' `[dependencies]` (only `[dev-dependencies]` if at all). | Ensure `crates/test-utils/` is referenced ONLY from `[dev-dependencies]`; keep it out of any member crate's `[dependencies]`. |
+| `error[E0432]: unresolved import soroban_sdk::Set`                       | `Set` type isn't exposed in soroban-sdk 26.0.1                                                       | Use `Map<BytesN<32>, ()>` as a Set; `contains_key` / `set(k, ())` are equivalent.            |
+| `BytesN::from_array` takes 2 args, not 1                                | The signature is `from_array(env: &Env, items: &[u8; N])`                                          | Thread `&env` through your test helpers.                                                   |
+| `cargo test` 12 errors: `no method named __constructor` on client      | The `CommitmentContractClient` doesn't expose `__constructor`; init happens at deploy time.        | Use `env.register(CommitmentContract, (admin, settlement_auth))` for in-process tests.    |
+| Stellar CLI: `parsing argument commitment: value is not parseable`       | CLI expects raw bytes via `-file-path`, not inline hex                                              | Convert hex to raw bytes via `xxd -r -p` and pass `--commitment-file-path <file>`.        |
+
+### Day 2 deviations from SPEC.md
+
+- **Hash function:** `circuits/SPEC.md §7` calls for the BN254-X5 / EVM-friendly
+  parameter set (rf=64, rp=204). The `noir-lang/poseidon v0.2.0` crate actually
+  uses the Filecoin-style set (rf=8, rp=57, alpha=5, t=3 / t=7). We chose
+  Filecoin-style so Day-3's `use dep::poseidon::poseidon::bn254::hash_6`
+  produces identical commitments on-chain. Re-baseline to BN254-X5 in
+  Day-5+ if needed for an external verifier.
+- **On-chain Poseidon:** the contract stores OPAQUE `BytesN<32>` values.
+  It does NOT call Poseidon host functions. Embedding the Filecoin constants
+  would have added ~45 KB to the WASM (the verifier already pins
+  `soroban-sdk = 26.0.1` to dodge the `testutils` feature flag). The
+  off-chain helper and Day-3 circuit are the single source of truth
+  for hash values; the contract is the store-and-burn layer.
+
+## 11. Repo layout (current)
+
+```
+lumen-dark-pool/
+├── Cargo.toml                   # workspace (soroban-sdk 26.0.1 exact pin)
+├── Cargo.lock
+├── SETUP.md                     # this file
+├── .gitignore                   # excludes target/, .contract_id, etc.
+├── contracts/
+│   ├── verifier/                # Day 1: IdentityContract + UltraHonk verifier
+│   └── commitment/              # Day 2: LIVE_COMMITMENTS + SPENT_NULLIFIERS
+│       ├── Cargo.toml
+│       ├── README.md             # Poseidon params pinned, deploy + invoke examples
+│       ├── src/lib.rs
+│       └── tests/commitment_test.rs
+├── crates/
+│   ├── ultrahonk-soroban-verifier/   # Day 1: BN254 verifier (~6.5 KB Rust)
+│   └── test-utils/                   # dev-only; not in workspace members
+├── circuits/
+│   ├── hello/                   # Day 1: Poseidon2 preimage proof
+│   └── match/                   # (pre-existing Day-3 skeleton)
+├── prover/
+│   └── compute-hash/            # Day 2: off-chain Poseidon helper (nargo execute)
+│       ├── Nargo.toml
+│       ├── Prover.toml
+│       └── src/main.nr           # hash_6 + hash_2; prints to stdout
+├── scripts/
+│   ├── hello_proof.sh           # Day 1 one-command demo
+│   └── commitment_demo.sh       # Day 2 one-command demo
+└── .commitment_contract_id      # last deployed contract id
+```

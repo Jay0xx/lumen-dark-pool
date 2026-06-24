@@ -1,0 +1,14 @@
+[package]
+name = "compute_hash"
+type = "bin"
+authors = ["lumen-dark-pool"]
+compiler_version = ">=1.0.0"
+
+# Same dep as /circuits/hello (Day 1) and the Day-3 matcher circuit.
+# v0.2.0 is the version pinned across the project; nargo 1.0.0-beta.9.
+[dependencies]
+poseidon = { tag = "v0.2.0", git = "https://github.com/noir-lang/poseidon" }
+
+[[bin]]
+name = "compute_hash"
+path = "src/main.nr"
