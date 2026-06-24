@@ -37,6 +37,8 @@ pub struct PublicMatch {
     pub nullifier_sell: Field,
     pub fill_amount: Field,
     pub clearing_price: Field,
+    pub owner_buy: Field,
+    pub owner_sell: Field,
 }
 
 /// Poseidon commitment for an order. Matches what the Day-2 Soroban

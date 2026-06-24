@@ -1,4 +1,4 @@
-# Prover.toml — T1 happy-path inputs (see /circuits/SPEC.md §6)
+# Prover.toml - T1 happy-path inputs (see /circuits/SPEC.md section 6)
 #
 # buy:  side=0 pair=42 amount=100 limit=105 owner=12345 nonce=111
 # sell: side=1 pair=42 amount=80  limit=100 owner=67890 nonce=222
@@ -11,11 +11,14 @@
 #   nullifier_buy  = Poseidon(commit_buy,  NULLIFIER_DOMAIN)
 #   nullifier_sell = Poseidon(commit_sell, NULLIFIER_DOMAIN)
 #
-# The four hash fields below are placeholders that match Noir 1.0.0-beta.22
-# stdlib defaults; regenerate them via:
-#   nargo execute witness --print-public-hash
-# or compute via the helper at /circuits/scripts/compute-hashes.ts.
-# Replace the zeros below once the helper produces real values.
+# Day-4 additions: owner_buy + owner_sell are the trader's Field IDs (already
+# cryptographically bound by C1's commitment opening). The settlement contract
+# looks them up against register_owner() to find the real Stellar addresses.
+#
+# The four hash fields below are no longer placeholders - they are real
+# commitments + nullifiers computed by /prover/compute-hash (Filecoin-style
+# Poseidon, BN254 Fr, alpha=5). Regenerate with `nargo execute` if you
+# change any of the buy/sell order fields above.
 
 # public
 commit_buy     = "0x01a8c4b54f90824685f88f6343c41c561d0212a00541043216ea31813fa72dd4"
@@ -25,15 +28,17 @@ nullifier_sell = "0x2ca47e359cfec650996d73e05c7bea762e07506745ab0ed176022fa9cc4c
 pair_id        = "42"
 fill_amount    = "80"
 clearing_price = "102"
+owner_buy      = "12345"
+owner_sell     = "67890"
 
-# private — buy order
+# private - buy order
 side_b   = "0"
 amount_b = "100"
 limit_b  = "105"
 owner_b  = "12345"
 nonce_b  = "111"
 
-# private — sell order
+# private - sell order
 side_s   = "1"
 amount_s = "80"
 limit_s  = "100"

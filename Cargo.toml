@@ -4,6 +4,7 @@ members = [
     "crates/ultrahonk-soroban-verifier",
     "contracts/verifier",
     "contracts/commitment",
+    "contracts/settlement",
 ]
 
 # Pin to the same soroban-sdk version as NethermindEth/rs-soroban-ultrahonk

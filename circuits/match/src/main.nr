@@ -5,8 +5,9 @@
 // Values are pulled from Prover.toml by `nargo` automatically.
 //
 // Test functions for the 8 SPEC section 6 scenarios (T1..T8) live in this same
-// file (Noir 1.0.0-beta.22 does not auto-discover tests/ as modules; the
-// Day-1 hello circuit proved the in-binary-file convention works).
+// file (Noir 1.0.0-beta.22 does not auto-discover tests/ as modules for
+// binary crates; the Day-1 hello circuit proved the in-binary-file convention
+// works).
 
 mod lib;
 
@@ -21,6 +22,13 @@ fn main(
     pair_id:        pub Field,
     fill_amount:    pub Field,
     clearing_price: pub Field,
+    // Day-4 add: trader identities for the settlement contract to look up.
+    // These are the SAME Field values already committed via C1 (the 6-tuple
+    // commitment hashes side, pair, amount, limit, owner, nonce). The settlement
+    // contract uses them as opaque IDs and resolves the real Stellar address
+    // via a register_owner() admin call.
+    owner_buy:      pub Field,
+    owner_sell:     pub Field,
 
     // ----- private witness: buy order -----
     side_b:   Field,
@@ -59,6 +67,8 @@ fn main(
         nullifier_sell,
         fill_amount,
         clearing_price,
+        owner_buy,
+        owner_sell,
     };
 
     verify_match(buy, sell, pub_);
@@ -81,7 +91,7 @@ fn t1_sell() -> Order {
     Order { side: 1, pair_id: 42, amount: 80,  limit_price: 100, owner: 67890, nonce: 222 }
 }
 
-// T1 hash values: computed by /prover/compute-hash (see Prover.toml).
+// T1 hash values + Day-4 owner fields.
 fn t1_pub() -> PublicMatch {
     PublicMatch {
         commit_buy:     0x01a8c4b54f90824685f88f6343c41c561d0212a00541043216ea31813fa72dd4,
@@ -90,6 +100,8 @@ fn t1_pub() -> PublicMatch {
         nullifier_sell: 0x2ca47e359cfec650996d73e05c7bea762e07506745ab0ed176022fa9cc4c6ec4,
         fill_amount:    80,
         clearing_price: 102,
+        owner_buy:      12345,
+        owner_sell:     67890,
     }
 }
 
@@ -111,6 +123,8 @@ fn test_t2_non_crossing_pair() {
         nullifier_sell: 0x2ca179a91bed7938a849484643c4265db8a790132efdedcd7c2e503492102644,
         fill_amount:    80,
         clearing_price: 102,
+        owner_buy:      12345,
+        owner_sell:     67890,
     };
     verify_match(buy, sell, pub_);
 }
@@ -152,6 +166,8 @@ fn test_t6_side_swap() {
         nullifier_sell: t1_pub().nullifier_sell,
         fill_amount:    80,
         clearing_price: 102,
+        owner_buy:      12345,
+        owner_sell:     67890,
     };
     verify_match(buy, t1_sell(), pub_);
 }
@@ -168,6 +184,8 @@ fn test_t7_wrong_pair_id_in_opening() {
         nullifier_sell: 0x011b50ef40f52c73202097631a22df7ed363f84116f58b081ebde5bd6bd8b33f,
         fill_amount:    80,
         clearing_price: 102,
+        owner_buy:      12345,
+        owner_sell:     67890,
     };
     verify_match(t1_buy(), sell, pub_);
 }
@@ -183,6 +201,8 @@ fn test_t8_zero_amount() {
         nullifier_sell: t1_pub().nullifier_sell,
         fill_amount:    80,
         clearing_price: 102,
+        owner_buy:      12345,
+        owner_sell:     67890,
     };
     verify_match(buy, t1_sell(), pub_);
 }

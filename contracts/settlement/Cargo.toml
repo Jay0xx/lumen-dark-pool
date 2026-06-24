@@ -1,0 +1,18 @@
+[package]
+name = "settlement"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# Same workspace pin as Day-1 verifier and Day-2 commitment.
+soroban-sdk = { workspace = true, default-features = false, features = ["alloc"] }
+# We deliberately do NOT add stellar-asset / soroban-token-sdk: the SAC
+# token is just another Soroban contract, and we call it via
+# `env.invoke_contract` with function-name Symbols (transfer_from, etc.).
+# No typed client needed; reduces the dependency surface.
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, default-features = false, features = ["alloc", "testutils"] }
