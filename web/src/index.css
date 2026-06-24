@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Lumen global styles - Inter + subtle grain on the background gradient. */
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-attachment: fixed;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% 0%, rgba(139, 92, 246, 0.06), transparent 60%),
+      radial-gradient(ellipse 60% 80% at 100% 100%, rgba(167, 139, 250, 0.04), transparent 60%);
+  }
+
+  /* Inter font fallback for environments where rsms.me is blocked. */
+  :root {
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  /* Always-visible focus rings on keyboard nav (AA + a11y). */
+  *:focus-visible {
+    outline: 2px solid theme("colors.lumen.500");
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer components {
+  .lumen-card {
+    @apply rounded-2xl bg-lumen-surface shadow-lumen border border-lumen-500/10;
+  }
+
+  .lumen-glow {
+    /* Subtle violet glow behind the active submit button or brand mark. */
+    background:
+      radial-gradient(closest-side, rgba(139, 92, 246, 0.18), transparent);
+    filter: blur(28px);
+  }
+
+  .lumen-progress-step {
+    @apply flex items-center gap-2 text-xs font-medium;
+  }
+
+  .lumen-pill {
+    @apply inline-flex items-center rounded-full border border-lumen-500/40 bg-lumen-50 px-2.5 py-0.5 text-xs font-medium text-lumen-700;
+  }
+}

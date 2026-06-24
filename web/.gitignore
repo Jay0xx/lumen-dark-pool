@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.vite/
+*.local
+
+# Wallet keypair used for the demo (v1 only).
+.env.lumen-demo-key
