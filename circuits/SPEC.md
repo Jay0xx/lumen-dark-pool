@@ -166,6 +166,17 @@ this Noir version, and verify they match what the Soroban host function
 returns. The `/circuits/scripts/verify-poseidon-parity.sh` helper does this
 end-to-end check.
 
+**Day 3 implementation note.** The as-built circuit (`/circuits/match`)
+does NOT use `std::hash::poseidon::poseidon_hash`. It uses the external
+crate `noir-lang/poseidon v0.2.0` (`bn254::hash_6` / `bn254::hash_2`),
+which ships with the **Filecoin-style** parameter set (rf=8, rp=57,
+alpha=5). This was chosen because the Day-2 commitment contract's
+off-chain helper at `/prover/compute-hash` uses the same crate, and the
+matcher must produce commitments byte-identical to what the helper (and
+hence the trader's commitment) compute. BN254-X5 (rf=64) requires
+regenerating ~45 KB of constants and is logged here as a Day-5+ stretch
+goal, not a Day-3 blocker.
+
 ## 8. Out of Scope (v2+)
 
 - Batch matching (N orders → one proof)

@@ -214,6 +214,69 @@ events   : 2x committed, 1x matched, 1x re-spend reverted (Error #5)
   off-chain helper and Day-3 circuit are the single source of truth
   for hash values; the contract is the store-and-burn layer.
 
+## 12. Day 3 - match circuit (shipped)
+
+The cryptographic core of the dark pool: a Noir circuit that proves a
+valid 1:1 BUY <-> SELL match on the same asset pair, with Poseidon
+commitment opening + price-cross + midpoint clearing + nullifier
+derivation. Outputs a UltraHonk proof that the on-chain verifier accepts.
+
+```bash
+# Build, test, prove, deploy verifier, invoke prove_identity
+cd lumen-dark-pool
+bash scripts/match_proof.sh
+# -> deploys a FRESH identity.wasm verifier (Day-1 contract, match VK baked in)
+#    to Stellar testnet, then invokes prove_identity. Verifier id saved to
+#    .match_verifier_contract_id.
+
+# Negative cases (each tamper must revert on-chain)
+bash scripts/match_proof_negative.sh
+# -> 4/4 pass: commit_buy fires C1, nullifier_buy fires C7,
+#               fill_amount fires C6, clearing_price fires C5
+
+# In-process unit tests (no network)
+cd circuits/match
+nargo test
+# -> 8 tests pass: T1 valid; T2-T8 each fires the right C-N.
+```
+
+Last verified run:
+
+```
+verifier     : CAYUUWMFFXXBCPTTSVELSLIC5FYFXWOAH5QU7ZDCV66UYI3WQPYDU75G
+network      : Stellar public testnet
+deploy tx    : 6a3a5d9e10695b85663c2242ebb2b1410d829f69a21d37eebbd31fe809feaa89
+proof size   : 14,592 bytes
+VK size      : 1,760 bytes
+nargo test   : 8/8 passed
+negative test: 4/4 reverted on-chain
+```
+
+### Day 3 gotchas
+
+| Symptom                                                                 | Cause                                                                                              | Fix                                                                                       |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `nargo test` reports `Running 0 test functions` even with `#[test]` in `tests/*.nr` | `tests/` is NOT auto-discovered; binary crates need tests in the entry file or via explicit `mod` declaration. | Put the `#[test]` functions directly in `src/main.nr` (the proven Day-1 pattern), OR add `mod tests;` to the crate root. We did the former. |
+| `error: Non-ASCII character in comment` (em-dash or section symbol)      | Noir 1.0.0-beta.22 doesn't accept non-ASCII in comments                                              | Replace `—` with `-`, `§` with `section`. Same bug hit on Day 1 and Day 2.                  |
+| `error: No module match_tests at path ...`                              | `mod match_tests;` was left over from an earlier wiring attempt in `src/lib.nr`                       | Delete the stale `mod match_tests;` line from `src/lib.nr` once tests move into `src/main.nr`. |
+| `error: missing public_inputs` check fires before `bb prove`            | Defensive existence check on the public_inputs file was placed BEFORE the bb prove call              | Move the check AFTER bb prove, or remove it (Day-1 script doesn't have one).               |
+| `Poseidon stdlib vs dep::poseidon produce DIFFERENT hashes`            | `std::hash::poseidon::poseidon_hash` uses BN254-X5 (rf=64, rp=204); `dep::poseidon v0.2.0` uses Filecoin-style (rf=8, rp=57, alpha=5). | Match the Day-2 helper: switch to `use dep::poseidon::poseidon::bn254;` and use `bn254::hash_6` / `bn254::hash_2`. Documented in `circuits/match/README.md` and `circuits/SPEC.md section 7`. |
+
+### Day 3 deviations from SPEC.md
+
+- **Poseidon parameters:** `SPEC section 7` calls for BN254-X5
+  (EVM-friendly, rf=64). The as-built circuit uses Filecoin-style
+  (rf=8, rp=57, alpha=5) to match the Day-2 helper. Both are secure for
+  the BN254 field; the swap is invisible to traders because the
+  commitment contract stores opaque `BytesN<32>` values. Filed for
+  Day-5+ re-baseline.
+- **C3 public pair_id:** `PublicMatch.pair_id` is informational only -
+  the circuit does NOT check it against the private orders' `pair_id`
+  (only the two private `pair_id`s are checked against each other).
+  Tampering `public pair_id` does NOT cause the verifier to revert.
+  Acceptable for v1; see `circuits/match/README.md` for a one-line fix
+  if Day-4 needs the linkage.
+
 ## 11. Repo layout (current)
 
 ```

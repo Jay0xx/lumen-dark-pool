@@ -18,10 +18,10 @@
 # Replace the zeros below once the helper produces real values.
 
 # public
-commit_buy     = "0x0"
-commit_sell    = "0x0"
-nullifier_buy  = "0x0"
-nullifier_sell = "0x0"
+commit_buy     = "0x01a8c4b54f90824685f88f6343c41c561d0212a00541043216ea31813fa72dd4"
+commit_sell    = "0x1350320eba82d6be77c7c635e34dcb26829c7cb84014029dc43f8d03884c61d6"
+nullifier_buy  = "0x1528fcbff14698f100f9b0920365e4e8f69d2ae3888af83d2f880cdfb6256c5b"
+nullifier_sell = "0x2ca47e359cfec650996d73e05c7bea762e07506745ab0ed176022fa9cc4c6ec4"
 pair_id        = "42"
 fill_amount    = "80"
 clearing_price = "102"

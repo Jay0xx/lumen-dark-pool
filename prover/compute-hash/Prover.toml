@@ -1,6 +1,8 @@
-side = "1"
+# Reference inputs for the known-pair test. The demo script also uses
+# these (side=0 BUY, pair=1, amount=1000, price=100, owner=42, nonce=1).
+side = "0"
 pair_id = "1"
-amount = "800"
-limit_price = "90"
-owner = "99"
+amount = "1000"
+limit_price = "100"
+owner = "42"
 nonce = "1"
